@@ -34,7 +34,11 @@ body { background-color: #0a0a0a; color: #ffffff; min-height: 100vh; display: fl
 
 .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px; width: 100%; max-width: 1200px; }
 .card-fatura { background: #f4f6f8; border-radius: 20px; overflow: hidden; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); color: #333; }
-.card-fatura-header { background: #22c1a6; color: white; padding: 15px; font-weight: bold; text-transform: uppercase; }
+
+/* MODIFICAÇÃO APLICADA AQUI: Azul por padrão (Em Aberto) e Vermelho quando Atrasada */
+.card-fatura-header { background: #0d2bd7; color: white; padding: 15px; font-weight: bold; text-transform: uppercase; transition: background-color 0.3s; }
+.card-fatura-header.atrasada { background: #ff4d4d; } 
+
 .card-fatura-body { padding: 20px; }
 .card-fatura-valor { font-size: 26px; color: #0d2bd7; margin-bottom: 10px; font-weight: bold; }
 .card-fatura-info { font-size: 13px; color: #555; margin-bottom: 15px; }
