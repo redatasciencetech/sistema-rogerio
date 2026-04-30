@@ -80,11 +80,11 @@
 
     <div class="seletor-empresas">
         <button id="btn-todas" onclick="selecionarEmpresa('todas')" class="btn-filtro-empresa ativo">Ver Todas</button>
-        <img id="img-aguas" src="./img/aguasdopara-logo.png" onclick="selecionarEmpresa('aguas')" class="logo-empresa-cliente" alt="Águas do Pará">
+        <img id="img-aguas" src="./img/aguasdopara-logo.png" onclick="selecionarEmpresa('aguas do para')" class="logo-empresa-cliente" alt="Águas do Pará">
         <img id="img-equatorial" src="./img/equatorial-logo.png" onclick="selecionarEmpresa('equatorial')" class="logo-empresa-cliente" alt="Equatorial">
         <img id="img-serena" src="./img/serena-logo.png" onclick="selecionarEmpresa('serena')" class="logo-empresa-cliente" alt="Serena">
         <img id="img-clariai" src="./img/clariai-logo.png" onclick="selecionarEmpresa('clariai')" class="logo-empresa-cliente" alt="Clariai">
-        <img id="img-sense" src="./img/sense-logo.png" onclick="selecionarEmpresa('sense')" class="logo-empresa-cliente" alt="Sense">
+        <img id="img-sense" src="./img/sense-logo.png" onclick="selecionarEmpresa('senseboard')" class="logo-empresa-cliente" alt="Sense">
     </div>
 
     <!-- NOVO: Container onde os botões dos imóveis vão aparecer dinamicamente -->
@@ -313,8 +313,9 @@
                     }
                 }
 
-                // Resgata o nome do Imóvel para colocar no Header
+                // Resgata o nome do Imóvel e da Empresa
                 const nomeImovel = f.imovel ? f.imovel.toUpperCase() : "GERAL";
+                const nomeEmpresa = f.empresa ? f.empresa.toUpperCase() : "N/A";
 
                 const temPix = f.codigoPix && f.codigoPix.trim() !== "";
                 const temBoleto = f.codigoBoleto && f.codigoBoleto.trim() !== "";
@@ -327,12 +328,12 @@
                     ? `<button class="btn-pagar" style="background: ${corTema}; color: #fff; border: none; cursor: pointer;" onclick="copiar('${f.codigoBoleto}')">BOLETO</button>`
                     : `<button class="btn-pagar" style="background: #f4f6f8; color: #999; border: 1px solid #ccc; cursor: not-allowed;" disabled>BOLETO</button>`;
 
-                // NOVO: Adicionado 📍 ${nomeImovel} no topo do card
+                // Inserção da Empresa no subtítulo do Card
                 container.innerHTML += `
                 <div class="card-fatura">
                     <div class="card-fatura-header${classeAtrasada}">
                         <div>${tituloMes}${tagAtrasada}</div>
-                        <div style="font-size: 0.75rem; font-weight: normal; margin-top: 5px; opacity: 0.9; letter-spacing: 1px;">📍 ${nomeImovel}</div>
+                        <div style="font-size: 0.75rem; font-weight: normal; margin-top: 5px; opacity: 0.9; letter-spacing: 1px;">📍 ${nomeImovel} [${nomeEmpresa}]</div>
                     </div>
                     <div class="card-fatura-body">
                         <div class="card-fatura-valor" style="color: ${corTema};">${f.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
