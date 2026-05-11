@@ -16,7 +16,6 @@
             font-weight: bold;
             transition: 0.3s;
         }
-        /* O efeito "aceso" entra aqui! Borda, brilho e leve zoom */
         .btn-filtro-empresa.ativo {
             border-color: #0d2bd7;
             background: white;
@@ -32,7 +31,6 @@
             box-shadow: 0 4px 10px rgba(13, 43, 215, 0.3);
         }
 
-        /* --- Estilos para os botões de Filtro de Imóveis --- */
         .filtro-imoveis-container {
             display: flex;
             gap: 10px;
@@ -62,7 +60,23 @@
             background: #E1C158;
             color: #000;
             border-color: #E1C158;
-            box-shadow: 0 0 10px rgba(225, 193, 88, 0.4); /* Brilho também no botão de imóvel selecionado */
+            box-shadow: 0 0 10px rgba(225, 193, 88, 0.4); 
+        }
+
+        /* ESTILOS DO CARROSSEL HORIZONTAL PADRONIZADO COM OS CARDS EXISTENTES */
+        .faturas-container-horizontal {
+            display: flex; gap: 15px; overflow-x: auto; padding: 10px 10px 20px 10px;
+            width: 95%; max-width: 1200px; margin: 10px auto 30px auto;
+            scrollbar-width: thin; scrollbar-color: #E1C158 transparent;
+        }
+        .faturas-container-horizontal::-webkit-scrollbar { height: 8px; }
+        .faturas-container-horizontal::-webkit-scrollbar-track { background: transparent; }
+        .faturas-container-horizontal::-webkit-scrollbar-thumb { background: #E1C158; border-radius: 4px; }
+
+        .faturas-container-horizontal .card-fatura {
+            min-width: 280px;
+            flex-shrink: 0;
+            margin: 0; 
         }
     </style>
 </head>
@@ -87,13 +101,20 @@
         <img id="img-sense" src="./img/sense-logo.png" onclick="selecionarEmpresa('senseboard')" class="logo-empresa-cliente" alt="Sense">
     </div>
 
-    <!-- NOVO: Container onde os botões dos imóveis vão aparecer dinamicamente -->
     <div id="filtroImoveisContainer" class="filtro-imoveis-container"></div>
 
-    <div class="faturas-topo-info">
+    <div class="faturas-topo-info" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
         <h1>Faturas em aberto</h1>
         <p id="resumo" class="resumo">Carregando dados da planilha...</p>
+
+        <div id="cardMesAtual" style="margin-top: 20px; margin-bottom: 10px; padding: 15px 30px; background: #111; border-radius: 12px; border-bottom: 4px solid #E1C158; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+            <span style="color: #E1C158; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">⚠️ Vencimentos deste Mês</span>
+            <h2 id="valorMesAtual" style="color: #fff; margin: 5px 0; font-size: 2.2rem;">R$ 0,00</h2>
+            <p id="textoMesAtual" style="color: #ccc; font-size: 0.9rem; margin: 0;">Calculando...</p>
+        </div>
     </div>
+
+    <div class="faturas-container-horizontal" id="carrosselFaturas"></div>
 
     <div class="cards-container" id="cards"></div>
 
@@ -115,6 +136,7 @@
             </table>
         </div>
         <div style="text-align: right; margin-top: 20px; font-size: 1.2rem;">
+            <span id="qtdHistorico" style="font-size: 1rem; color: #666; margin-right: 15px;">0 faturas pagas</span>
             Total acumulado: <span id="totalHistorico" style="font-weight: bold; color: #0d2bd7;">R$ 0,00</span>
         </div>
     </div>
@@ -128,7 +150,7 @@
         
         let faturasDB = [];
         let empresaSelecionada = 'todas';
-        let imovelSelecionado = 'todos'; // Variável para controlar o imóvel
+        let imovelSelecionado = 'todos'; 
 
         window.onload = () => { carregarDados(); };
 
@@ -138,7 +160,6 @@
                 const csv = await resposta.text();
                 faturasDB = converterCsvParaJson(csv);
                 
-                // Renderiza os botões de imóveis logo após carregar os dados
                 renderizarFiltroImoveis();
                 aplicarFiltros();
             } catch (erro) {
@@ -155,7 +176,7 @@
                 if(limpo === 'codigopix') return 'codigoPix';
                 if(limpo === 'codigoboleto') return 'codigoBoleto';
                 if(limpo === 'datapagamento') return 'dataPagamento';
-                return limpo; // Aqui "Imóvel" vira "imovel"
+                return limpo; 
             });
             
             return linhas.slice(1).filter(l => l.trim() !== "").map(linha => {
@@ -189,25 +210,20 @@
                 if(document.getElementById(imgId)) document.getElementById(imgId).classList.add("ativo");
             }
             
-            // Quando troca a empresa, reseta a lista de imóveis e aplica o filtro
             renderizarFiltroImoveis();
             aplicarFiltros();
         }
 
-        // NOVO: Função para criar os botões de imóveis dependendo da empresa
         function renderizarFiltroImoveis() {
             const containerFiltro = document.getElementById("filtroImoveisContainer");
             
-            // Pega os dados filtrando apenas pela empresa atual (ou todas)
             let faturasEmpresa = faturasDB;
             if (empresaSelecionada !== 'todas') {
                 faturasEmpresa = faturasDB.filter(f => f.empresa && f.empresa.toLowerCase() === empresaSelecionada.toLowerCase());
             }
             
-            // Extrai os nomes únicos dos imóveis cadastrados
             const imoveisUnicos = [...new Set(faturasEmpresa.map(f => f.imovel || 'Não Informado'))].filter(i => i !== 'Não Informado');
             
-            // Sempre começa resetado para "Todos" quando atualiza a lista
             imovelSelecionado = 'todos';
             
             let botoesHTML = `<button id="btn-imovel-todos" class="btn-filtro-imovel ativo" onclick="selecionarImovel('todos')">Todos os Imóveis</button>`;
@@ -220,11 +236,9 @@
             containerFiltro.innerHTML = botoesHTML;
         }
 
-        // NOVO: Função para quando clicar no botão do Imóvel
         function selecionarImovel(nome) {
             imovelSelecionado = nome;
             
-            // Atualiza a cor (ativo/inativo) dos botões de imóvel
             document.querySelectorAll(".btn-filtro-imovel").forEach(el => el.classList.remove("ativo"));
             const idBusca = nome === 'todos' ? 'btn-imovel-todos' : "btn-imovel-" + nome.replace(/\s+/g, '-').toLowerCase();
             const btn = document.getElementById(idBusca);
@@ -258,65 +272,151 @@
             let abertas = faturasDB.filter(f => f.status && f.status.toLowerCase() === 'aberto');
             let pagas = faturasDB.filter(f => f.status && f.status.toLowerCase() === 'pago');
 
-            // 1. Filtro da Empresa
             if (empresaSelecionada !== 'todas') {
                 abertas = abertas.filter(f => f.empresa && f.empresa.toLowerCase() === empresaSelecionada.toLowerCase());
                 pagas = pagas.filter(f => f.empresa && f.empresa.toLowerCase() === empresaSelecionada.toLowerCase());
             }
 
-            // 2. Filtro do Imóvel (NOVO)
             if (imovelSelecionado !== 'todos') {
                 abertas = abertas.filter(f => f.imovel && f.imovel === imovelSelecionado);
                 pagas = pagas.filter(f => f.imovel && f.imovel === imovelSelecionado);
             }
 
-            // 3. Filtro de Ano no Histórico
             if (ano !== 'todos') {
                 pagas = pagas.filter(h => h.dataPagamento && h.dataPagamento.includes(ano));
             }
 
             abertas.sort((a, b) => converterDataBR(a.vencimento) - converterDataBR(b.vencimento));
             
-            renderizarFaturas(abertas);
+            // Passa a quantidade de faturas pagas para renderizarFaturas atualizar o texto superior
+            renderizarFaturas(abertas, pagas.length);
             renderizarHistorico(pagas);
         }
 
-        function renderizarFaturas(lista) {
+        // NOVO: A função agora recebe a quantidade de faturas pagas como parâmetro
+        function renderizarFaturas(lista, qtdPagas) {
             const container = document.getElementById("cards");
-            container.innerHTML = lista.length ? "" : "<p style='color:#333'>Nenhuma fatura em aberto no momento.</p>";
+            container.innerHTML = lista.length ? "" : "<p style='color:#333; width: 100%; text-align: center;'>Nenhuma fatura antiga em aberto.</p>";
+            
             const total = lista.reduce((s, f) => s + f.valor, 0);
-            document.getElementById("resumo").innerHTML = `Você possui <b>${lista.length} faturas</b>, totalizando <b>${total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</b>`;
+            const totalFormatado = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            
+            // Atualiza o resumo com a contagem de pagas
+            document.getElementById("resumo").innerHTML = `Você possui <b>${lista.length} faturas abertas</b> (${totalFormatado}).`;
             
             const hoje = new Date();
             hoje.setHours(0,0,0,0);
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+            const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+            const faturasMesAtual = lista.filter(f => {
+                const dataVenc = converterDataBR(f.vencimento);
+                return dataVenc.getMonth() === mesAtual && dataVenc.getFullYear() === anoAtual;
+            });
+            const totalMesAtual = faturasMesAtual.reduce((acc, curr) => acc + curr.valor, 0);
+
+            const cardMes = document.getElementById('cardMesAtual');
+            if(cardMes) {
+                document.getElementById('valorMesAtual').innerText = totalMesAtual.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                document.getElementById('textoMesAtual').innerText = `${faturasMesAtual.length} faturas vencem em ${nomesMeses[mesAtual]}/${anoAtual}`;
+
+                if(faturasMesAtual.length === 0) {
+                    cardMes.style.borderBottomColor = '#22c1a6';
+                    document.getElementById('valorMesAtual').style.color = '#22c1a6';
+                } else {
+                    cardMes.style.borderBottomColor = '#E1C158';
+                    document.getElementById('valorMesAtual').style.color = '#fff';
+                }
+            }
+
+            const carrosselContainer = document.getElementById("carrosselFaturas");
+            carrosselContainer.innerHTML = "";
+
+            if(faturasMesAtual.length > 0) {
+                faturasMesAtual.forEach(f => {
+                    const dataVenc = converterDataBR(f.vencimento);
+                    const isAtrasada = dataVenc < hoje;
+                    const classeAtrasada = isAtrasada ? " atrasada" : "";
+                    const tagAtrasada = isAtrasada ? " (ATRASADA)" : "";
+                    
+                    const corTema = isAtrasada ? "#ff4d4d" : "#0d2bd7";
+                    let tituloMes = (f.mes || "").toUpperCase();
+                    
+                    if (f.vencimento) {
+                        let anoFatura = dataVenc.getFullYear();
+                        let mesVencimento = dataVenc.getMonth();
+                        if ((tituloMes.includes("DEZEMBRO") || tituloMes.includes("NOVEMBRO")) && mesVencimento <= 1) {
+                            anoFatura -= 1; 
+                        }
+                        const jaTemAno = /\d/.test(tituloMes); 
+                        if (!jaTemAno) {
+                            tituloMes = `${tituloMes} ${anoFatura}`;
+                        }
+                    }
+
+                    const nomeImovel = f.imovel ? f.imovel.toUpperCase() : "GERAL";
+                    const nomeEmpresa = f.empresa ? f.empresa.toUpperCase() : "N/A";
+                    const temPix = f.codigoPix && f.codigoPix.trim() !== "";
+                    const temBoleto = f.codigoBoleto && f.codigoBoleto.trim() !== "";
+
+                    const btnPixHTML = temPix 
+                        ? `<button class="btn-pagar" style="background: ${corTema}; color: #fff; cursor: pointer; border: none;" onclick="copiar('${f.codigoPix}')">PIX</button>`
+                        : `<button class="btn-pagar" style="background: #e0e0e0; color: #999; cursor: not-allowed; border: none;" disabled>PIX</button>`;
+
+                    const btnBoletoHTML = temBoleto 
+                        ? `<button class="btn-pagar" style="background: ${corTema}; color: #fff; border: none; cursor: pointer;" onclick="copiar('${f.codigoBoleto}')">BOLETO</button>`
+                        : `<button class="btn-pagar" style="background: #f4f6f8; color: #999; border: 1px solid #ccc; cursor: not-allowed;" disabled>BOLETO</button>`;
+
+                    carrosselContainer.innerHTML += `
+                    <div class="card-fatura">
+                        <div class="card-fatura-header${classeAtrasada}">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap;">
+                                <span>${tituloMes}${tagAtrasada}</span>
+                                <span style='background: #E1C158; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; margin-left: 5px; vertical-align: middle; font-weight: bold;'>ESTE MÊS</span>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: normal; margin-top: 5px; opacity: 0.9; letter-spacing: 1px;">📍 ${nomeImovel} [${nomeEmpresa}]</div>
+                        </div>
+                        <div class="card-fatura-body">
+                            <div class="card-fatura-valor" style="color: ${corTema};">${f.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
+                            <div class="card-fatura-info">Vencimento: ${formatarDataExibicao(f.vencimento)}</div>
+                            <div class="pix-box" style="border-color: ${corTema};">
+                                ${btnPixHTML}
+                                ${btnBoletoHTML}
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                carrosselContainer.innerHTML = "<p style='color:#666; width: 100%; text-align: center; font-style: italic;'>Nenhuma fatura pendente neste mês.</p>";
+            }
             
             lista.forEach(f => {
                 const dataVenc = converterDataBR(f.vencimento);
                 const isAtrasada = dataVenc < hoje;
+                const isEsteMes = dataVenc.getMonth() === mesAtual && dataVenc.getFullYear() === anoAtual;
+
                 const classeAtrasada = isAtrasada ? " atrasada" : "";
                 const tagAtrasada = isAtrasada ? " (ATRASADA)" : "";
+                const tagEsteMes = (isEsteMes && !isAtrasada) ? " <span style='background: #E1C158; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; margin-left: 5px; vertical-align: middle; font-weight: bold;'>ESTE MÊS</span>" : "";
+                
                 const corTema = isAtrasada ? "#ff4d4d" : "#0d2bd7";
-
                 let tituloMes = (f.mes || "").toUpperCase();
                 
                 if (f.vencimento) {
                     let anoFatura = dataVenc.getFullYear();
                     let mesVencimento = dataVenc.getMonth();
-
                     if ((tituloMes.includes("DEZEMBRO") || tituloMes.includes("NOVEMBRO")) && mesVencimento <= 1) {
                         anoFatura -= 1; 
                     }
-
                     const jaTemAno = /\d/.test(tituloMes); 
                     if (!jaTemAno) {
                         tituloMes = `${tituloMes} ${anoFatura}`;
                     }
                 }
 
-                // Resgata o nome do Imóvel e da Empresa
                 const nomeImovel = f.imovel ? f.imovel.toUpperCase() : "GERAL";
                 const nomeEmpresa = f.empresa ? f.empresa.toUpperCase() : "N/A";
-
                 const temPix = f.codigoPix && f.codigoPix.trim() !== "";
                 const temBoleto = f.codigoBoleto && f.codigoBoleto.trim() !== "";
 
@@ -328,11 +428,13 @@
                     ? `<button class="btn-pagar" style="background: ${corTema}; color: #fff; border: none; cursor: pointer;" onclick="copiar('${f.codigoBoleto}')">BOLETO</button>`
                     : `<button class="btn-pagar" style="background: #f4f6f8; color: #999; border: 1px solid #ccc; cursor: not-allowed;" disabled>BOLETO</button>`;
 
-                // Inserção da Empresa no subtítulo do Card
                 container.innerHTML += `
                 <div class="card-fatura">
                     <div class="card-fatura-header${classeAtrasada}">
-                        <div>${tituloMes}${tagAtrasada}</div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap;">
+                            <span>${tituloMes}${tagAtrasada}</span>
+                            ${tagEsteMes}
+                        </div>
                         <div style="font-size: 0.75rem; font-weight: normal; margin-top: 5px; opacity: 0.9; letter-spacing: 1px;">📍 ${nomeImovel} [${nomeEmpresa}]</div>
                     </div>
                     <div class="card-fatura-body">
@@ -363,7 +465,6 @@
                 total += h.valor;
                 const nomeImovel = h.imovel ? h.imovel : "Geral";
                 
-                // NOVO: Adicionado <small> com o nome do imóvel embaixo da referência
                 corpo.innerHTML += `
                 <tr>
                     <td>
@@ -376,6 +477,10 @@
                     <td>${h.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</td>
                 </tr>`;
             });
+            
+            // NOVO: Atualiza o texto da quantidade de faturas pagas e o total em dinheiro
+            const textoQtd = lista.length === 1 ? '1 fatura paga' : `${lista.length} faturas pagas`;
+            document.getElementById("qtdHistorico").innerText = textoQtd;
             document.getElementById("totalHistorico").innerText = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         }
 
